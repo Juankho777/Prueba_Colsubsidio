@@ -32,14 +32,9 @@ class BusinessLogic:
         """Segmenta clientes por nivel de riesgo basado en percentiles."""
         
         # Umbrales desde configuración
-        p_high = self.risk_thresholds['thresholds']['high_risk']
-        p_medium_high = self.risk_thresholds['thresholds']['medium_high'] 
-        p_medium = self.risk_thresholds['thresholds']['medium']
-        
-        # Calcular umbrales reales
-        threshold_high = np.percentile(scores, p_high)
-        threshold_medium_high = np.percentile(scores, p_medium_high)
-        threshold_medium = np.percentile(scores, p_medium)
+        threshold_high = 0.15      # 15% churn = Alto riesgo
+        threshold_medium_high = 0.08   # 8% churn = Medio-Alto riesgo  
+        threshold_medium = 0.04        # 4% churn = Medio riesgo
         
         # Asignar segmentos
         segments = []

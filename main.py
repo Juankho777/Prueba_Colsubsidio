@@ -140,13 +140,18 @@ def main():
         # PASO 5: PREDICCIONES FINALES
         # =====================================================================
         logger.info("PASO 5: Generando predicciones finales...")
-        
+
         # Predicciones de probabilidad
         final_predictions = final_model.predict_proba(X_test)[:, 1]
-        
+
+        # Ajustar threshold para mejor balance precision/recall
+        threshold_optimized = 0.3  # Reducir de 0.5 default a 0.3
+        binary_predictions_optimized = (final_predictions >= threshold_optimized).astype(int)
+
         logger.info(f"Predicciones generadas para {len(final_predictions)} clientes")
         logger.info(f"Rango de probabilidades: {final_predictions.min():.3f} - {final_predictions.max():.3f}")
-        
+        logger.info(f"Threshold optimizado: {threshold_optimized} (vs 0.5 default)")
+        logger.info(f"Clientes clasificados como riesgo: {binary_predictions_optimized.sum()} ({binary_predictions_optimized.sum()/len(binary_predictions_optimized)*100:.1f}%)")
         # =====================================================================
         # PASO 6: LÓGICA DE NEGOCIO Y SEGMENTACIÓN
         # =====================================================================
@@ -232,9 +237,9 @@ def main():
         
         # Resumen de negocio
         # Resumen de negocio
-        logger.info(f"Framework status: {business_impact['framework_status']}")
-        logger.info(f"Clientes prioritarios identificados: {business_impact['priority_clients_identified']:,}")
-        logger.info(f"Próximo paso: {business_impact['next_steps'][0] if business_impact.get('next_steps') else 'Implementar estrategias'}")
+        logger.info(f"Framework status: {business_impact.get('framework_status', 'Completado')}")
+        logger.info(f"Clientes prioritarios: {business_impact.get('priority_clients_identified', 0):,}")
+        logger.info(f"Segmentos creados: {business_impact.get('segments_created', 0)}")
         
         logger.info("=== MODELO COMPLETADO EXITOSAMENTE ===")
         
