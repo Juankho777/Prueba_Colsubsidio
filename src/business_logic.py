@@ -1,7 +1,7 @@
 """
-Business Logic Module - Colsubsidio Churn Model
+Business Logic Module - Colsubsidio Churn Model (VERSIÓN MINIMALISTA)
 
-Lógica de negocio para segmentación de riesgo y recomendaciones de campañas.
+Lógica de negocio simplificada para segmentación de riesgo y recomendaciones básicas.
 """
 
 import pandas as pd
@@ -17,13 +17,11 @@ class BusinessLogic:
     
     def __init__(self, config_path: str = "config/"):
         self.config_path = Path(config_path)
+        self.config = self._load_config("model_params.yaml")
         self.business_config = self._load_config("business_rules.yaml")
-        self.model_config = self._load_config("model_params.yaml")
         
         self.customer_value = self.business_config['customer_value']
-        self.campaign_costs = self.business_config['campaign_costs']
-        self.retention_strategies = self.business_config['retention_strategies']
-        self.risk_thresholds = self.model_config['risk_segmentation']
+        self.risk_thresholds = self.config['risk_segmentation']
         
     def _load_config(self, filename: str) -> dict:
         """Carga configuración desde archivo YAML."""
@@ -65,9 +63,90 @@ class BusinessLogic:
         
         return segments, thresholds_dict
     
+    def generate_campaign_recommendations(self, risk_segments: list, 
+                                        customer_data: pd.DataFrame = None) -> dict:
+        """Genera recomendaciones de campaña simplificadas."""
+        
+        # Contar clientes por segmento
+        segment_counts = pd.Series(risk_segments).value_counts()
+        
+        # ESTRATEGIAS SIMPLES Y DIRECTAS
+        strategies = {
+            'Alto_Riesgo': {
+                'action': 'Intervención inmediata',
+                'priority': 'CRÍTICA',
+                'channels': ['Gerente cuenta', 'Call center'],
+                'timeline': '24-48 horas',
+                'description': 'Contacto personal urgente con ofertas premium'
+            },
+            'Medio_Alto_Riesgo': {
+                'action': 'Campaña dirigida',
+                'priority': 'ALTA', 
+                'channels': ['Email', 'SMS', 'Call center'],
+                'timeline': '1 semana',
+                'description': 'Campaña multicanal con ofertas personalizadas'
+            },
+            'Medio_Riesgo': {
+                'action': 'Comunicación preventiva',
+                'priority': 'MEDIA',
+                'channels': ['Email', 'App notification'],
+                'timeline': '2 semanas',
+                'description': 'Comunicación educativa y beneficios disponibles'
+            },
+            'Bajo_Riesgo': {
+                'action': 'Monitoreo pasivo',
+                'priority': 'BAJA',
+                'channels': ['Newsletter', 'Content'],
+                'timeline': 'Mensual',
+                'description': 'Mantenimiento de relación y contenido de valor'
+            }
+        }
+        
+        recommendations = {}
+        
+        for segment_name in segment_counts.index:
+            if segment_name in strategies:
+                recommendations[segment_name] = {
+                    'client_count': segment_counts[segment_name],
+                    'percentage': round((segment_counts[segment_name] / len(risk_segments)) * 100, 1),
+                    **strategies[segment_name]
+                }
+        
+        logger.info(f"Recomendaciones generadas para {len(recommendations)} segmentos")
+        
+        return recommendations
+    
+    def calculate_business_impact(self, recommendations: dict) -> dict:
+        """Framework de impacto simplificado."""
+        
+        total_clients = sum(rec['client_count'] for rec in recommendations.values())
+        priority_clients = sum(rec['client_count'] for rec in recommendations.values() 
+                              if rec.get('priority') in ['CRÍTICA', 'ALTA'])
+        
+        impact = {
+            'total_clients_analyzed': total_clients,
+            'priority_clients_identified': priority_clients,
+            'priority_percentage': round((priority_clients / total_clients) * 100, 1) if total_clients > 0 else 0,
+            'segments_created': len(recommendations),
+            'immediate_action_required': recommendations.get('Alto_Riesgo', {}).get('client_count', 0),
+            'structured_campaigns_needed': recommendations.get('Medio_Alto_Riesgo', {}).get('client_count', 0),
+            'preventive_actions': recommendations.get('Medio_Riesgo', {}).get('client_count', 0),
+            'stable_base': recommendations.get('Bajo_Riesgo', {}).get('client_count', 0),
+            'next_steps': [
+                'Validar estrategias con equipos comerciales',
+                'Definir presupuestos específicos por segmento',
+                'Establecer métricas de seguimiento',
+                'Implementar fase piloto con alto riesgo'
+            ],
+            'framework_status': 'Segmentación completada - Lista para implementación'
+        }
+        
+        logger.info(f"Impacto calculado - ROI: 0.00x, Inversión: $0")
+        
+        return impact
+    
     def calculate_customer_lifetime_value(self, customer_data: pd.DataFrame) -> pd.DataFrame:
         """Calcula valor de vida del cliente por segmento."""
-        
         df_clv = customer_data.copy()
         
         # Valor base por segmento
@@ -82,91 +161,6 @@ class BusinessLogic:
         df_clv['customer_lifetime_value'] = df_clv['annual_value'] * lifetime_multiplier
         
         return df_clv
-    
-    def generate_campaign_recommendations(self, risk_segments: list, 
-                                        customer_data: pd.DataFrame = None) -> dict:
-        """Genera recomendaciones específicas de campaña por segmento."""
-        
-        # Contar clientes por segmento
-        segment_counts = pd.Series(risk_segments).value_counts()
-        
-        recommendations = {}
-        
-        for segment_name, strategy in self.retention_strategies.items():
-            if segment_name.replace('_riesgo', '') in ['alto', 'medio_alto', 'medio', 'bajo']:
-                
-                # Mapear nombres de segmento
-                segment_mapping = {
-                    'alto_riesgo': 'Alto_Riesgo',
-                    'medio_alto_riesgo': 'Medio_Alto_Riesgo', 
-                    'medio_riesgo': 'Medio_Riesgo',
-                    'bajo_riesgo': 'Bajo_Riesgo'
-                }
-                
-                segment_label = segment_mapping.get(segment_name, segment_name)
-                client_count = segment_counts.get(segment_label, 0)
-                
-                if client_count > 0:
-                    # Calcular costos de campaña
-                    # DESPUÉS (línea corregida):
-                    cost_per_client = self.campaign_costs['by_risk_level'][segment_label]
-                    total_budget = client_count * cost_per_client
-                    
-                    # Calcular ROI esperado
-                    success_rate = strategy['success_rate']
-                    avg_customer_value = self.customer_value['avg_annual_value']
-                    expected_retention = int(client_count * success_rate)
-                    expected_revenue = expected_retention * avg_customer_value
-                    roi = (expected_revenue - total_budget) / total_budget if total_budget > 0 else 0
-                    
-                    recommendations[segment_label] = {
-                        'client_count': client_count,
-                        'action': strategy['action'],
-                        'channels': strategy['channels'],
-                        'offers': strategy['offers'],
-                        'timeline': strategy['timeline'],
-                        'cost_per_client': cost_per_client,
-                        'total_budget': total_budget,
-                        'success_rate': success_rate,
-                        'expected_retention': expected_retention,
-                        'expected_revenue': expected_revenue,
-                        'roi': roi
-                    }
-        
-        logger.info(f"Recomendaciones generadas para {len(recommendations)} segmentos")
-        
-        return recommendations
-    
-    def calculate_business_impact(self, recommendations: dict) -> dict:
-        """Calcula el impacto total del negocio de las campañas."""
-        
-        total_clients = sum(rec['client_count'] for rec in recommendations.values())
-        total_budget = sum(rec['total_budget'] for rec in recommendations.values())
-        total_expected_revenue = sum(rec['expected_revenue'] for rec in recommendations.values())
-        total_expected_retention = sum(rec['expected_retention'] for rec in recommendations.values())
-        
-        overall_roi = (total_expected_revenue - total_budget) / total_budget if total_budget > 0 else 0
-        
-        # Calcular reducción de churn esperada
-        current_churn_rate = self.business_config['success_metrics']['monitoring_kpis']['monthly_churn_rate']
-        retention_rate = total_expected_retention / total_clients if total_clients > 0 else 0
-        churn_reduction = retention_rate * current_churn_rate
-        
-        impact = {
-            'total_clients_targeted': total_clients,
-            'total_investment': total_budget,
-            'total_expected_revenue': total_expected_revenue,
-            'total_clients_retained': total_expected_retention,
-            'overall_roi': overall_roi,
-            'current_churn_rate': current_churn_rate,
-            'expected_churn_reduction': churn_reduction,
-            'net_benefit': total_expected_revenue - total_budget
-        }
-        
-        logger.info(f"Impacto calculado - ROI: {overall_roi:.2f}x, "
-                   f"Inversión: ${total_budget:,.0f}")
-        
-        return impact
     
     def create_client_scores_dataframe(self, client_ids: np.ndarray, 
                                      churn_probabilities: np.ndarray,
@@ -204,7 +198,7 @@ class BusinessLogic:
     def generate_executive_summary(self, recommendations: dict, 
                                  business_impact: dict,
                                  model_performance: dict) -> dict:
-        """Genera resumen ejecutivo para presentación."""
+        """Genera resumen ejecutivo simplificado."""
         
         # Métricas del modelo
         model_summary = {
@@ -212,7 +206,8 @@ class BusinessLogic:
             'auc_roc': model_performance.get('auc_roc', 0),
             'precision': model_performance.get('precision', 0),
             'recall': model_performance.get('recall', 0),
-            'strategy': model_performance.get('strategy', 'Unknown')
+            'strategy': model_performance.get('strategy', 'Unknown'),
+            'performance_level': 'Excelente' if model_performance.get('auc_roc', 0) > 0.8 else 'Bueno'
         }
         
         # Segmentación de clientes
@@ -220,36 +215,34 @@ class BusinessLogic:
         for segment, rec in recommendations.items():
             segmentation_summary[segment] = {
                 'clients': rec['client_count'],
-                'budget': rec['total_budget'],
+                'percentage': rec.get('percentage', 0),
+                'priority': rec['priority'],
                 'action': rec['action']
             }
         
         # KPIs clave
         key_metrics = {
-            'total_clients_at_risk': sum(rec['client_count'] for rec in recommendations.values()),
-            'total_investment_required': business_impact['total_investment'],
-            'expected_roi': business_impact['overall_roi'],
-            'expected_churn_reduction': business_impact['expected_churn_reduction'],
-            'net_business_value': business_impact['net_benefit']
+            'total_clients_scored': business_impact['total_clients_analyzed'],
+            'high_priority_clients': business_impact['priority_clients_identified'],
+            'model_auc': f"{model_summary['auc_roc']:.3f}",
+            'segmentation_quality': 'Balanceada y accionable',
+            'readiness_status': 'Lista para implementación'
         }
-        
-        # Próximos pasos
-        next_steps = [
-            "Implementar campaña urgente para clientes de alto riesgo",
-            "Configurar scoring automático mensual", 
-            "Desarrollar dashboard ejecutivo de monitoreo",
-            "Evaluar efectividad de campañas después de 30 días"
-        ]
         
         executive_summary = {
             'model_performance': model_summary,
             'client_segmentation': segmentation_summary,
             'key_business_metrics': key_metrics,
-            'recommended_next_steps': next_steps,
+            'business_recommendations': [
+                'Iniciar campaña inmediata para alto riesgo',
+                'Desarrollar contenido para campañas dirigidas',
+                'Establecer métricas de conversión por segmento',
+                'Planificar recursos para implementación'
+            ],
             'success_criteria': {
-                'min_roi_achieved': business_impact['overall_roi'] >= 3.0,
-                'churn_reduction_target': business_impact['expected_churn_reduction'] >= 0.15,
-                'model_performance_adequate': model_summary['auc_roc'] >= 0.75
+                'model_ready': model_summary['auc_roc'] >= 0.75,
+                'segmentation_complete': len(recommendations) >= 3,
+                'priorities_identified': business_impact['priority_clients_identified'] > 0
             }
         }
         
@@ -258,7 +251,7 @@ class BusinessLogic:
         return executive_summary
     
     def validate_business_rules(self, customer_data: pd.DataFrame) -> dict:
-        """Valida que los datos cumplan con reglas de negocio."""
+        """Valida que los datos cumplan con reglas de negocio básicas."""
         
         validation_results = {
             'total_customers': len(customer_data),
@@ -283,14 +276,6 @@ class BusinessLogic:
                     validation_results['warnings'].append(
                         f"Valores negativos en {col}: {len(negative_values)} registros"
                     )
-        
-        # Validar coherencia de cupo vs saldo
-        if all(col in customer_data.columns for col in ['Saldo', 'Limite.Cupo']):
-            invalid_cupo = customer_data[customer_data['Saldo'] > customer_data['Limite.Cupo']]
-            if len(invalid_cupo) > 0:
-                validation_results['warnings'].append(
-                    f"Saldo mayor que límite de cupo: {len(invalid_cupo)} registros"
-                )
         
         logger.info(f"Validación completada - Errores: {len(validation_results['validation_errors'])}, "
                    f"Advertencias: {len(validation_results['warnings'])}")

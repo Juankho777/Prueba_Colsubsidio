@@ -231,9 +231,10 @@ def main():
             logger.info(f"  {segment}: {count:,} clientes")
         
         # Resumen de negocio
-        logger.info(f"Inversión total requerida: ${business_impact['total_investment']:,.0f}")
-        logger.info(f"ROI proyectado: {business_impact['overall_roi']:.1f}x")
-        logger.info(f"Clientes a retener: {business_impact['total_clients_retained']:,}")
+        # Resumen de negocio
+        logger.info(f"Framework status: {business_impact['framework_status']}")
+        logger.info(f"Clientes prioritarios identificados: {business_impact['priority_clients_identified']:,}")
+        logger.info(f"Próximo paso: {business_impact['next_steps'][0] if business_impact.get('next_steps') else 'Implementar estrategias'}")
         
         logger.info("=== MODELO COMPLETADO EXITOSAMENTE ===")
         

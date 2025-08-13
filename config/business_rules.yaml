@@ -1,160 +1,38 @@
-# Reglas de Negocio - Colsubsidio UES Crédito
-# Este archivo contiene toda la lógica de negocio específica para el modelo de fuga
+# Reglas de Negocio - Colsubsidio UES Crédito (FRAMEWORK CONCEPTUAL)
+# Este archivo contiene framework estratégico para el modelo de fuga
 
 # =============================================================================
 # INFORMACIÓN CORPORATIVA
 # =============================================================================
+
+
+
 company:
   name: "Caja Colombiana de Subsidio Familiar - Colsubsidio"
   unit: "UES Crédito"
   country: "Colombia"
   currency: "COP"
 
-# =============================================================================
-# VALOR DEL CLIENTE
-# =============================================================================
 customer_value:
-  # Valor promedio anual por cliente en COP
   avg_annual_value: 2500000
-  
-  # Segmentación de valor por tipo de cliente
   value_by_segment:
     "Segmento_Alto": 5000000
     "Segmento_Medio": 3000000
     "Segemnto_Basico": 2000000
     "Segmento_Joven": 1500000
-  
-  # Factores de ajuste
-  lifetime_multiplier: 3.5  # Valor de por vida = valor_anual * multiplicador
-  churn_impact_factor: 0.8  # Porcentaje del valor perdido por fuga
+  lifetime_multiplier: 3.5
+  churn_impact_factor: 0.8
 
-# =============================================================================
-# COSTOS DE CAMPAÑAS DE RETENCIÓN
-# =============================================================================
-campaign_costs:
-  # Costo por cliente según nivel de riesgo (COP)
-  by_risk_level:
-    Alto_Riesgo: 200000      # Intervención personal + ofertas premium
-    Medio_Alto_Riesgo: 100000       # Email + SMS + call center
-    Medio_Riesgo: 50000             # Email + notificaciones push
-    Bajo_Riesgo: 20000              # Newsletter + contenido educativo
-  
-  # Canales de comunicación y sus costos
-  channels:
-    call_center: 80000       # Costo por llamada personalizada
-    gerente_cuenta: 150000   # Costo por visita gerencial
-    email_marketing: 5000    # Costo por email personalizado
-    sms: 1500               # Costo por SMS
-    push_notification: 500   # Costo por notificación push
-    newsletter: 2000        # Costo por newsletter
-    app_notification: 300   # Costo por notificación en app
-
-# =============================================================================
-# ESTRATEGIAS DE RETENCIÓN POR SEGMENTO
-# =============================================================================
-retention_strategies:
-  Alto_Riesgo:
-    action: "INTERVENCIÓN INMEDIATA"
-    channels:
-      - "call_center"
-      - "gerente_cuenta"
-    offers:
-      - "Beneficios premium personalizados"
-      - "Descuentos en cuota de manejo"
-      - "Aumento de cupo sin costo"
-      - "Productos complementarios gratuitos"
-    timeline: "24-48 horas"
-    success_rate: 0.6  # 60% efectividad esperada
-  
-  Medio_Alto_Riesgo:
-    action: "CAMPAÑA PERSONALIZADA"
-    channels:
-      - "email_marketing"
-      - "sms"
-      - "call_center"
-    offers:
-      - "Productos complementarios con descuento"
-      - "Activación de beneficios no utilizados"
-      - "Programas de fidelización"
-    timeline: "1 semana"
-    success_rate: 0.4  # 40% efectividad esperada
-  
-  Medio_Riesgo:
-    action: "COMUNICACIÓN PREVENTIVA"
-    channels:
-      - "email_marketing"
-      - "push_notification"
-    offers:
-      - "Beneficios familiares Colsubsidio"
-      - "Educación financiera personalizada"
-      - "Descuentos en servicios adicionales"
-    timeline: "2 semanas"
-    success_rate: 0.25  # 25% efectividad esperada
-  
-  Bajo_Riesgo:
-    action: "MONITOREO PASIVO"
-    channels:
-      - "newsletter"
-      - "app_notification"
-    offers:
-      - "Contenido educativo financiero"
-      - "Tips de uso de productos"
-      - "Información de nuevos beneficios"
-    timeline: "Mensual"
-    success_rate: 0.1  # 10% efectividad esperada
-
-# =============================================================================
-# PRODUCTOS Y SERVICIOS COLSUBSIDIO
-# =============================================================================
-products:
-  credit_products:
-    cupo_rotativo:
-      description: "Cupo rotativo de crédito"
-      avg_limit: 2000000
-      interest_rate: 0.029  # 2.9% mensual
-    
-    credito_consumo:
-      description: "Crédito de consumo"
-      avg_amount: 5000000
-      interest_rate: 0.019  # 1.9% mensual
-    
-    credito_hipotecario:
-      description: "Crédito hipotecario"
-      avg_amount: 150000000
-      interest_rate: 0.009  # 0.9% mensual
-  
-  # Beneficios específicos Colsubsidio
-  benefits:
-    cuota_monetaria:
-      value: 102000  # Valor mensual en COP
-      impact_on_retention: "high"
-    
-    subsidio_vivienda:
-      value: 500000  # Valor del subsidio
-      impact_on_retention: "medium"
-    
-    bono_lonchera:
-      value: 50000   # Valor mensual
-      impact_on_retention: "low"
-
-# =============================================================================
-# MÉTRICAS DE ÉXITO DEL PROYECTO
-# =============================================================================
 success_metrics:
-  # Objetivos del modelo
   model_performance:
-    min_auc_roc: 0.75        # AUC mínimo aceptable
-    target_precision_at_10: 0.15  # Precision mínima en top 10%
-    max_false_positive_rate: 0.1   # Máxima tasa de falsos positivos
-  
-  # Objetivos de negocio
+    min_auc_roc: 0.75
+    target_precision_at_10: 0.15
+    max_false_positive_rate: 0.1
   business_targets:
-    churn_reduction: 0.20    # 20% reducción en fuga esperada
-    min_roi: 3.0            # ROI mínimo 3:1
-    max_campaign_budget: 500000000  # Presupuesto máximo campaña (COP)
-    
-  # KPIs de seguimiento
+    churn_reduction: 0.20
+    min_roi: 3.0
+    max_campaign_budget: 500000000
   monitoring_kpis:
-    monthly_churn_rate: 0.028    # Tasa mensual actual de fuga
-    customer_lifetime_value: 8750000  # CLV promedio
-    retention_cost_per_customer: 75000  # Costo promedio de retención
+    monthly_churn_rate: 0.028
+    customer_lifetime_value: 8750000
+    retention_cost_per_customer: 75000
