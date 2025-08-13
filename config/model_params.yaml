@@ -13,11 +13,16 @@ project:
 # CONFIGURACIÓN DE DATOS
 # =============================================================================
 data:
-  # Rutas de archivos (relativas a la raíz del proyecto)
+  # Rutas de archivos (configuración flexible para notebooks y main.py)
   paths:
-    raw_data: "data/raw/"
+    raw_data: "data/raw/"           # Para main.py desde raíz
     processed_data: "data/processed/"
     outputs: "data/outputs/"
+    
+    # Rutas alternativas para notebooks (cuando se ejecutan desde notebooks/)
+    raw_data_notebook: "../data/raw/"
+    processed_data_notebook: "../data/processed/"
+    outputs_notebook: "../data/outputs/"
   
   # Archivos esperados
   files:
@@ -118,12 +123,16 @@ models:
     solver: "liblinear"
     random_state: 42
   
-  # XGBoost (opcional)
+  # XGBoost (modelo experimental)
   xgboost:
     n_estimators: 100
     max_depth: 6
     learning_rate: 0.1
+    subsample: 0.8
+    colsample_bytree: 0.8
     random_state: 42
+    eval_metric: "auc"
+    early_stopping_rounds: 10
 
 # =============================================================================
 # CONFIGURACIÓN DE VALIDACIÓN
@@ -198,6 +207,11 @@ outputs:
     feature_importance: "feature_importance.csv"
     model_comparison: "model_comparison_results.csv"
     risk_segments: "risk_segmentation.csv"
+    client_scores: "client_risk_segmentation.csv"
+    segmentation_summary: "risk_segmentation_summary.csv"
+    best_model: "best_model.pkl"
+    scaler: "scaler.pkl"
+    encoders: "encoders.pkl"
   
   # Formato de reportes
   reports:
@@ -211,3 +225,83 @@ logging:
   level: "INFO"  # DEBUG, INFO, WARNING, ERROR
   format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
   file: "logs/model_execution.log"
+
+# =============================================================================
+# CONFIGURACIÓN ESPECÍFICA PARA NOTEBOOKS
+# =============================================================================
+notebook_config:
+  # Configuración para cuando se ejecutan notebooks individualmente
+  use_notebook_paths: true  # Usar rutas con ../
+  auto_detect_environment: true  # Detectar automáticamente si estamos en notebook
+  
+  # Rutas específicas para notebooks
+  data_paths:
+    raw_data: "../data/raw/"
+    processed_data: "../data/processed/"
+    outputs: "../data/outputs/"
+    config: "../config/"
+
+# =============================================================================
+# CONFIGURACIÓN DE EXPERIMENTACIÓN
+# =============================================================================
+experiments:
+  # Configuración para experimentos como XGBoost
+  xgboost_experiment:
+    enabled: true
+    compare_with_baseline: true
+    baseline_model: "random_forest"
+    
+    # Parámetros específicos para XGBoost
+    scale_pos_weight_auto: true  # Calcular automáticamente
+    use_early_stopping: true
+    validation_fraction: 0.2
+    
+    # Métricas de comparación
+    comparison_metrics:
+      - "auc_roc"
+      - "precision"
+      - "recall"
+      - "f1_score"
+      - "precision_at_k"
+    
+    # Criterios de selección del mejor modelo
+    selection_criteria:
+      primary_metric: "auc_roc"
+      weights:
+        auc_roc: 0.4
+        recall: 0.35
+        f1_score: 0.15
+        precision: 0.1
+
+# =============================================================================
+# CONFIGURACIÓN DE PATHS DINÁMICOS
+# =============================================================================
+path_detection:
+  # Sistema para detectar automáticamente el contexto de ejecución
+  notebook_indicators:
+    - "ipynb_checkpoints"
+    - "In["
+    - "get_ipython"
+  
+  # Ajuste automático de rutas
+  auto_adjust_paths: true
+  
+  # Rutas base según contexto
+  contexts:
+    main_script:  # Ejecutando main.py desde raíz
+      raw_data: "data/raw/"
+      processed_data: "data/processed/"
+      outputs: "data/outputs/"
+      config: "config/"
+    
+    notebook:  # Ejecutando notebook desde notebooks/
+      raw_data: "../data/raw/"
+      processed_data: "../data/processed/"
+      outputs: "../data/outputs/"
+      config: "../config/"
+    
+    jupyter_lab:  # Ejecutando en JupyterLab
+      raw_data: "../data/raw/"
+      processed_data: "../data/processed/"
+      outputs: "../data/outputs/"
+      config: "../config/"
