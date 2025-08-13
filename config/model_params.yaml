@@ -1,0 +1,213 @@
+# Configuración de Parámetros del Modelo - Colsubsidio Churn Prediction
+# Este archivo centraliza todos los parámetros para evitar hardcoding
+
+# =============================================================================
+# CONFIGURACIÓN GENERAL
+# =============================================================================
+project:
+  name: "colsubsidio_churn_model"
+  version: "1.0.0"
+  random_state: 42
+
+# =============================================================================
+# CONFIGURACIÓN DE DATOS
+# =============================================================================
+data:
+  # Rutas de archivos (relativas a la raíz del proyecto)
+  paths:
+    raw_data: "data/raw/"
+    processed_data: "data/processed/"
+    outputs: "data/outputs/"
+  
+  # Archivos esperados
+  files:
+    train: "train.csv"
+    test: "test.csv"
+    demograficas: "train_test_demograficas.xlsx"
+    subsidios: "train_test_subsidios.xlsx"
+    diccionario: "diccionario_datos.xlsx"
+  
+  # Configuración de carga
+  encoding: "cp1252"
+  separator: ";"
+
+# =============================================================================
+# CONFIGURACIÓN DE PREPROCESAMIENTO
+# =============================================================================
+preprocessing:
+  # Variables a limpiar (formato monetario)
+  financial_columns:
+    - "Disponible.Avances"
+    - "Limite.Avances" 
+    - "Total.Intereses"
+    - "Saldos.Mes.Ant"
+    - "Pagos.Mes.Ant"
+    - "Vtas.Mes.Ant"
+    - "Limite.Cupo"
+    - "Pago.del.Mes"
+    - "Pago.Minimo"
+    - "Vr.Mora"
+    - "Vr.Cuota.Manejo"
+    - "Saldo"
+  
+  # Valores a reemplazar en limpieza
+  replacements:
+    - ","
+    - " "
+    - "$"
+    - ".00"
+  
+  # Manejo de valores faltantes
+  missing_strategy: "fill_zero"  # fill_zero, drop, median, mean
+
+# =============================================================================
+# FEATURE ENGINEERING
+# =============================================================================
+feature_engineering:
+  # Variables derivadas a crear
+  derived_features:
+    utilization_ratio:
+      numerator: "Saldo"
+      denominator: "Limite.Cupo"
+      default_value: 0
+    
+    payment_behavior:
+      numerator: "Pagos.Mes.Ant"
+      denominator: "Saldos.Mes.Ant"
+      adjustment: 1
+      default_value: 0
+    
+    financial_stress:
+      components:
+        - condition: "Edad.Mora > 0"
+        - condition: "Vr.Mora > 0"
+        - condition: "utilization_ratio > 0.8"
+    
+    client_activity:
+      components:
+        - condition: "Vtas.Mes.Ant > 0"
+        - condition: "Pagos.Mes.Ant > 0"
+    
+    benefits_index:
+      components:
+        - "cuota_monetaria"
+        - "sub_vivenda"
+        - "bono_lonchera"
+    
+    is_inactive:
+      conditions:
+        - "Saldo == 0"
+        - "Vtas.Mes.Ant == 0"
+
+# =============================================================================
+# CONFIGURACIÓN DE MODELOS
+# =============================================================================
+models:
+  # Random Forest (modelo principal)
+  random_forest:
+    n_estimators: 100
+    max_depth: 10
+    min_samples_split: 2
+    min_samples_leaf: 1
+    random_state: 42
+    n_jobs: -1
+  
+  # Logistic Regression (modelo de comparación)
+  logistic_regression:
+    max_iter: 1000
+    solver: "liblinear"
+    random_state: 42
+  
+  # XGBoost (opcional)
+  xgboost:
+    n_estimators: 100
+    max_depth: 6
+    learning_rate: 0.1
+    random_state: 42
+
+# =============================================================================
+# CONFIGURACIÓN DE VALIDACIÓN
+# =============================================================================
+validation:
+  # División de datos
+  test_size: 0.2
+  val_size: 0.2
+  random_state: 42
+  stratify: true
+  
+  # Cross-validation
+  cv_folds: 5
+  cv_scoring: "roc_auc"
+  
+  # Métricas a evaluar
+  metrics:
+    - "roc_auc"
+    - "precision"
+    - "recall"
+    - "f1"
+    - "precision_at_k"
+
+# =============================================================================
+# MANEJO DE DESBALANCE
+# =============================================================================
+class_balance:
+  # Estrategias a probar
+  strategies:
+    - "class_weights"
+    - "undersampling"
+    - "oversampling"
+  
+  # Configuración de undersampling
+  undersampling:
+    ratio_multiplier: 10  # majority_class = minority_class * ratio_multiplier
+    random_state: 42
+  
+  # Configuración de oversampling
+  oversampling:
+    minority_multiplier: 3
+    random_state: 42
+
+# =============================================================================
+# SEGMENTACIÓN DE RIESGO
+# =============================================================================
+risk_segmentation:
+  # Umbrales basados en percentiles
+  thresholds:
+    high_risk: 95      # Top 5%
+    medium_high: 80    # Top 20%
+    medium: 60         # Top 40%
+    # low: < 60%       # Bottom 60%
+  
+  # Etiquetas de segmentos
+  labels:
+    high_risk: "Alto_Riesgo"
+    medium_high: "Medio_Alto_Riesgo"
+    medium: "Medio_Riesgo"
+    low: "Bajo_Riesgo"
+  
+  # Configuración para precision@k
+  precision_at_k: 0.1  # Top 10%
+
+# =============================================================================
+# CONFIGURACIÓN DE OUTPUTS
+# =============================================================================
+outputs:
+  # Archivos de salida
+  files:
+    predictions: "final_predictions.csv"
+    feature_importance: "feature_importance.csv"
+    model_comparison: "model_comparison_results.csv"
+    risk_segments: "risk_segmentation.csv"
+  
+  # Formato de reportes
+  reports:
+    format: "html"  # html, pdf, both
+    include_plots: true
+    
+# =============================================================================
+# CONFIGURACIÓN DE LOGGING
+# =============================================================================
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: "logs/model_execution.log"

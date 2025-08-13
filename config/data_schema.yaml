@@ -1,0 +1,401 @@
+# Esquema de Datos - Colsubsidio Churn Model
+# Define la estructura esperada de todos los datasets para validación automática
+# BASADO EN LA ESTRUCTURA DE LOS ARCHIVOS PROPORCIONADOS
+
+# =============================================================================
+# CONFIGURACIÓN GENERAL DE VALIDACIÓN
+# =============================================================================
+validation:
+  strict_mode: false  # Si true, falla si faltan columnas opcionales
+  allow_extra_columns: true  # Permite columnas adicionales no especificadas
+  check_data_types: true  # Valida tipos de datos
+  check_ranges: true  # Valida rangos de valores
+
+# =============================================================================
+# CONFIGURACIÓN DE CARGA DE ARCHIVOS
+# =============================================================================
+file_loading:
+  train_csv:
+    encoding: "cp1252"
+    separator: ";"
+    header: 0
+    expected_columns_count: 22  # Basado en la columna concatenada del train real
+  
+  test_csv:
+    encoding: "cp1252" 
+    separator: ";"
+    header: 0
+    expected_columns_count: 20  # Basado en la columna concatenada del test real
+  
+  demograficas_xlsx:
+    sheet_name: 0  # Primera hoja
+    header: 0
+  
+  subsidios_xlsx:
+    sheet_name: 0  # Primera hoja  
+    header: 0
+
+# =============================================================================
+# ESQUEMA DATASET TRAIN (ESTRUCTURA REAL)
+# =============================================================================
+train:
+  description: "Dataset principal de entrenamiento con variable target"
+  # Columnas exactas como aparecen en el archivo real
+  exact_column_order:
+    - "id"
+    - "Fecha.Expedicion" 
+    - "Cancelacion"
+    - "Gestionable"
+    - "Retencion"
+    - "TIPO"
+    - "ANO_MES"
+    - "Target"
+    - "Fecha.Proceso"
+    - "Disponible.Avances"
+    - "Limite.Avances"
+    - "Total.Intereses"
+    - "Saldos.Mes.Ant"
+    - "Pagos.Mes.Ant"
+    - "Vtas.Mes.Ant"
+    - "Edad.Mora"
+    - "Limite.Cupo"
+    - "Pago.del.Mes"
+    - "Pago.Minimo"
+    - "Vr.Mora"
+    - "Vr.Cuota.Manejo"
+    - "Saldo"
+  
+  column_definitions:
+    # Identificador único
+    id:
+      type: ["int64", "object"]
+      nullable: false
+      unique: true
+      description: "Identificador único del cliente"
+    
+    # Variable objetivo (SOLO EN TRAIN)
+    Target:
+      type: ["int64", "object"]
+      nullable: false
+      allowed_values: [0, 1, "0", "1"]
+      description: "Variable target: 0=No Fuga, 1=Fuga"
+    
+    # Variables de fechas
+    Fecha.Expedicion:
+      type: "object"
+      nullable: true
+      description: "Fecha de expedición"
+    
+    Fecha.Proceso:
+      type: "object" 
+      nullable: true
+      description: "Fecha de proceso"
+    
+    # Variables categóricas de gestión
+    Cancelacion:
+      type: "object"
+      nullable: true
+      description: "Indicador de cancelación"
+    
+    Gestionable:
+      type: "object"
+      nullable: true
+      description: "Indicador si es gestionable"
+    
+    Retencion:
+      type: "object"
+      nullable: true
+      description: "Indicador de retención (solo en train)"
+    
+    TIPO:
+      type: "object"
+      nullable: true
+      description: "Tipo de cliente"
+    
+    ANO_MES:
+      type: ["object", "int64"]
+      nullable: true
+      description: "Año y mes de referencia"
+    
+    # Variables financieras principales (vienen como object/string)
+    Disponible.Avances:
+      type: "object"
+      nullable: true
+      description: "Disponible para avances"
+      requires_numeric_conversion: true
+    
+    Limite.Avances:
+      type: "object"
+      nullable: true
+      description: "Límite para avances"
+      requires_numeric_conversion: true
+    
+    Total.Intereses:
+      type: "object"
+      nullable: true
+      description: "Total de intereses"
+      requires_numeric_conversion: true
+    
+    Saldos.Mes.Ant:
+      type: "object"
+      nullable: true
+      description: "Saldos del mes anterior"
+      requires_numeric_conversion: true
+    
+    Pagos.Mes.Ant:
+      type: "object"
+      nullable: true
+      description: "Pagos del mes anterior"
+      requires_numeric_conversion: true
+    
+    Vtas.Mes.Ant:
+      type: "object"
+      nullable: true
+      description: "Ventas del mes anterior"
+      requires_numeric_conversion: true
+    
+    Edad.Mora:
+      type: ["int64", "float64", "object"]
+      nullable: true
+      min_value: 0
+      description: "Días de mora"
+    
+    Limite.Cupo:
+      type: "object"
+      nullable: true
+      description: "Límite de cupo asignado"
+      requires_numeric_conversion: true
+    
+    Pago.del.Mes:
+      type: "object"
+      nullable: true
+      description: "Pago del mes"
+      requires_numeric_conversion: true
+    
+    Pago.Minimo:
+      type: "object"
+      nullable: true
+      description: "Pago mínimo"
+      requires_numeric_conversion: true
+    
+    Vr.Mora:
+      type: ["int64", "float64", "object"]
+      nullable: true
+      min_value: 0
+      description: "Valor en mora"
+    
+    Vr.Cuota.Manejo:
+      type: "object"
+      nullable: true
+      description: "Valor cuota de manejo"
+      requires_numeric_conversion: true
+    
+    Saldo:
+      type: "object"
+      nullable: true
+      description: "Saldo actual del cliente"
+      requires_numeric_conversion: true
+
+  # Validaciones específicas
+# =============================================================================
+# ESQUEMA DATASET TEST (ESTRUCTURA REAL)
+# =============================================================================
+test:
+  description: "Dataset de prueba para predicciones (sin variable target)"
+  # Columnas exactas como aparecen en el archivo real  
+  exact_column_order:
+    - "id"
+    - "Fecha.Expedicion"
+    - "Cancelacion" 
+    - "Gestionable"
+    - "TIPO"
+    - "ANO_MES"
+    - "Fecha.Proceso"
+    - "Disponible.Avances"
+    - "Limite.Avances"
+    - "Total.Intereses"
+    - "Saldos.Mes.Ant"
+    - "Pagos.Mes.Ant"
+    - "Vtas.Mes.Ant"
+    - "Edad.Mora"
+    - "Limite.Cupo"
+    - "Pago.del.Mes"
+    - "Pago.Minimo"
+    - "Vr.Mora"
+    - "Vr.Cuota.Manejo"
+    - "Saldo"
+  
+  # Usa las mismas definiciones de columnas que train, excepto Target y Retencion
+  inherits_column_definitions_from: "train"
+  exclude_columns:
+    - "Target"
+    - "Retencion"
+
+# =============================================================================
+# ESQUEMA DATASET DEMOGRÁFICAS (ESTRUCTURA INFERIDA)
+# =============================================================================
+demograficas:
+  description: "Variables sociodemográficas de los clientes"
+  expected_columns:
+    id:
+      type: ["int64", "object"]
+      nullable: false
+      unique: true
+      description: "Identificador único del cliente"
+    
+    # Columnas esperadas basadas en el código original
+    edad:
+      type: ["int64", "float64", "object"]
+      nullable: true
+      min_value: 18
+      max_value: 100
+      description: "Edad del cliente"
+    
+    segmento:
+      type: "object"
+      nullable: true
+      expected_values: 
+        - "Segemnto_Basico"  # Mantener typo como en original
+        - "Segmento_Alto" 
+        - "Segmento_Joven"
+        - "Segmento_Medio"
+      description: "Segmento del cliente"
+    
+    nivel_educativo:
+      type: "object"
+      nullable: true
+      description: "Nivel educativo del cliente"
+    
+    estado_civil:
+      type: "object" 
+      nullable: true
+      description: "Estado civil del cliente"
+    
+    Genero:
+      type: "object"
+      nullable: true
+      description: "Género del cliente"
+    
+    estrato:
+      type: ["int64", "float64", "object"]
+      nullable: true
+      min_value: 1
+      max_value: 6
+      description: "Estrato socioeconómico"
+    
+    PAC:
+      type: "object"
+      nullable: true
+      description: "Variable PAC"
+    
+    contrato:
+      type: "object"
+      nullable: true
+      description: "Tipo de contrato"
+    
+    categoria:
+      type: "object"
+      nullable: true
+      description: "Categoría del cliente"
+
+# =============================================================================
+# ESQUEMA DATASET SUBSIDIOS (ESTRUCTURA INFERIDA)
+# =============================================================================
+subsidios:
+  description: "Variables de beneficios y subsidios Colsubsidio"
+  expected_columns:
+    id:
+      type: ["int64", "object"]
+      nullable: false
+      unique: true
+      description: "Identificador único del cliente"
+    
+    # Columnas esperadas basadas en el código original
+    cuota_monetaria:
+      type: ["int64", "float64", "object"]
+      nullable: true
+      min_value: 0
+      description: "Valor cuota monetaria"
+    
+    sub_vivenda:
+      type: ["int64", "float64", "object"] 
+      nullable: true
+      min_value: 0
+      description: "Subsidio de vivienda"
+    
+    bono_lonchera:
+      type: ["int64", "float64", "object"]
+      nullable: true
+      min_value: 0
+      description: "Bono lonchera"
+
+# =============================================================================
+# ESQUEMA DATASET DICCIONARIO
+# =============================================================================
+diccionario:
+  description: "Diccionario de datos con definiciones de variables"
+  required_columns:
+    Variable:
+      type: "object"
+      nullable: false
+      description: "Nombre de la variable"
+    
+    Descripcion:
+      type: "object"
+      nullable: true
+      description: "Descripción de la variable"
+
+# =============================================================================
+# VALIDACIONES GLOBALES ENTRE DATASETS
+# =============================================================================
+cross_dataset_validation:
+  # Validar que todos los IDs en train/test existan en demográficas y subsidios
+  id_consistency:
+    check_demograficas_coverage: true
+    check_subsidios_coverage: true
+    min_coverage_percentage: 95  # Al menos 95% de cobertura
+  
+  # Validar que no hay solapamiento entre train y test
+  train_test_separation:
+    check_no_overlap: true
+    message: "Train y test no deben tener IDs en común"
+  
+  # Validar distribuciones similares
+  distribution_checks:
+    check_age_distribution: true
+    check_segment_distribution: true
+    max_distribution_difference: 0.1  # Máximo 10% diferencia
+
+# =============================================================================
+# CONFIGURACIÓN DE REPORTES DE VALIDACIÓN
+# =============================================================================
+validation_reporting:
+  generate_report: true
+  report_format: "html"  # html, json, txt
+  include_summary: true
+  include_details: true
+  save_to_file: true
+  report_path: "data/validation_reports/"
+
+# =============================================================================
+# CONFIGURACIÓN DE LIMPIEZA AUTOMÁTICA
+# =============================================================================
+auto_cleaning:
+  # Limpieza automática de variables financieras
+  financial_columns_cleanup:
+    enabled: true
+    remove_characters: [",", "$", " "]
+    convert_to_numeric: true
+    replace_errors_with: 0
+  
+  # Estandarización de categóricas
+  categorical_standardization:
+    enabled: true
+    to_uppercase: true
+    trim_whitespace: true
+    
+  # Manejo de fechas
+  date_handling:
+    enabled: true
+    infer_format: true
+    default_format: "%Y-%m-%d"
