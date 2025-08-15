@@ -1,0 +1,19 @@
+INSIGHTS EDA TRAIN - COLSUBSIDIO
+========================================
+
+Total clientes: 50,001
+Tasa fuga: 2.8%
+Desbalance: 34:1
+
+TOP 3 VARIABLES PREDICTIVAS:
+1. utilizacion_cupo: 0.078
+2. ratio_pago: 0.066
+3. Saldo: 0.056
+
+VARIABLE MÁS IMPORTANTE: utilizacion_cupo
+
+PERFILES DE RIESGO:
+Bajo: 35,555 clientes (3.5% fuga)
+Medio_Alto: 8,532 clientes (1.5% fuga)
+Alto: 3,592 clientes (0.0% fuga)
+Medio: 2,322 clientes (1.6% fuga)
